@@ -1,7 +1,7 @@
 [project]
 name = "ledgeriq"
 version = "0.1.0"
-description = "Add your description here"
+description = "Project LedgerIQ is an enterprise-grade Financial Retrieval-Augmented Generation (RAG) platform designed to automate complex due diligence across multi-year SEC filings (10-K/10-Q)."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
