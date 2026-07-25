@@ -1,7 +1,9 @@
-FROM mcr.microsoft.com/devcontainers/python:1-3.11-bullseye
+# Use Bookworm (Debian 12) to avoid expired key errors in older Bullseye images
+FROM mcr.microsoft.com/devcontainers/python:1-3.11-bookworm
 
-# Install system dependencies required for PDF parsing and OCR
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Clean up broken third-party APT sources if present, then install required dependencies
+RUN rm -f /etc/apt/sources.list.d/yarn.list /etc/apt/sources.list.d/node.list \
+    && apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     poppler-utils \
     tesseract-ocr \

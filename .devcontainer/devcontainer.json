@@ -1,5 +1,5 @@
 {
-  "name": "Financial RAG Pipeline Dev Environment",
+  "name": "LedgerIQ Dev Environment",
   "build": {
     "dockerfile": "Dockerfile"
   },
@@ -17,7 +17,6 @@
       ]
     }
   },
-  // Automatically install dependencies using uv lockfile when container opens
-  "postCreateCommand": "uv sync",
+  "postCreateCommand": "uv venv .venv && (test -f pyproject.toml && uv sync || echo 'No pyproject.toml yet')",
   "remoteUser": "vscode"
 }
