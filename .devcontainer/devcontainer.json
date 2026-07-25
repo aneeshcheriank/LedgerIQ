@@ -1,0 +1,23 @@
+{
+  "name": "Financial RAG Pipeline Dev Environment",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/workspace/.venv/bin/python",
+        "python.testing.pytestEnabled": true
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "eamodio.gitlens"
+      ]
+    }
+  },
+  // Automatically install dependencies using uv lockfile when container opens
+  "postCreateCommand": "uv sync",
+  "remoteUser": "vscode"
+}
