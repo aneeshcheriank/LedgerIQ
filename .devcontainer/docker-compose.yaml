@@ -1,0 +1,47 @@
+services:
+  # 1. Your Python App / Dev Container
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspace:cached
+      - ~/.claude:/home/vscode/.claude # claude API key storage
+    # Keeps the container alive for VS Code connection
+    command: sleep infinity
+    environment:
+      - VECTOR_DB_URL=http://qdrant:6333
+      - PG_CONN_STR=postgresql://ledger:ledgerpass@postgres:5432/ledgerdb
+    networks: 
+      - dev-network
+
+  # 2. Vector Database (e.g., Qdrant)
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks: 
+      - dev-network
+
+  # 3. Persistent Storage for Parent Documents & Metadata
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ledger
+      POSTGRES_PASSWORD: ledgerpass
+      POSTGRES_DB: ledgerdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks: 
+      - dev-network
+
+volumes:
+  qdrant_data:
+  pg_data:
+
+networks:
+  dev-network:
