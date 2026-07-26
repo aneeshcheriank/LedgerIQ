@@ -7,7 +7,12 @@
     "vscode": {
       "settings": {
         "python.defaultInterpreterPath": "/workspace/.venv/bin/python",
-        "python.testing.pytestEnabled": true
+        "python.testing.pytestEnabled": true,
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit"
+        }
       },
       "extensions": [
         "anthropic.claude-code", 
