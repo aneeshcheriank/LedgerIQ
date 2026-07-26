@@ -18,6 +18,9 @@
       ]
     }
   },
-  "postCreateCommand": "uv venv .venv && (test -f pyproject.toml && uv sync || echo 'No pyproject.toml yet')",
+  "postCreateCommand": "uv venv .venv && (test -f pyproject.toml && uv sync || echo 'No pyproject.toml yet') && echo 'export PATH=\"/workspace/.venv/bin:$PATH\"' >> /home/vscode/.bashrc",
+  "remoteEnv": {
+    "PATH": "/workspace/.venv/bin:${containerEnv:PATH}"
+  },
   "remoteUser": "vscode"
 }
