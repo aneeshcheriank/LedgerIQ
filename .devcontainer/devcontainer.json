@@ -1,8 +1,8 @@
 {
   "name": "LedgerIQ Dev Environment",
-  "build": {
-    "dockerfile": "Dockerfile"
-  },
+  "dockerComposeFile": "docker-compose.yaml",
+  "service": "app",
+  "workspaceFolder": "/workspace/LedgerIQ",
   "customizations": {
     "vscode": {
       "settings": {
@@ -10,6 +10,7 @@
         "python.testing.pytestEnabled": true
       },
       "extensions": [
+        "anthropic.claude-code", 
         "ms-python.python",
         "ms-python.vscode-pylance",
         "charliermarsh.ruff",
