@@ -2,7 +2,7 @@
   "name": "LedgerIQ Dev Environment",
   "dockerComposeFile": "docker-compose.yaml",
   "service": "app",
-  "workspaceFolder": "/workspace/LedgerIQ",
+  "workspaceFolder": "/workspace",
   "customizations": {
     "vscode": {
       "settings": {
