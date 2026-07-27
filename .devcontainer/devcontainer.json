@@ -2,6 +2,7 @@
   "name": "LedgerIQ Dev Environment",
   "dockerComposeFile": "docker-compose.yaml",
   "service": "app",
+  "runServices": ["docling", "postgres", "qdrant"],
   "workspaceFolder": "/workspace",
   "customizations": {
     "vscode": {
