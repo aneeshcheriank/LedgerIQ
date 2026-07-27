@@ -12,8 +12,10 @@ services:
       - VECTOR_DB_URL=http://qdrant:6333
       - PG_CONN_STR=postgresql://ledger:ledgerpass@postgres:5432/ledgerdb
       - DOCLING_URL=http://docling:5001
-    networks: 
-      - dev-network
+    networks:
+      dev-network:
+        aliases:
+          - app
 
   # 2. Vector Database (e.g., Qdrant)
   qdrant:
@@ -22,8 +24,10 @@ services:
       - "6333:6333"
     volumes:
       - qdrant_data:/qdrant/storage
-    networks: 
-      - dev-network
+    networks:
+      dev-network:
+        aliases:
+          - qdrant
 
   # 3. Persistent Storage for Parent Documents & Metadata
   postgres:
@@ -36,8 +40,10 @@ services:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
-    networks: 
-      - dev-network
+    networks:
+      dev-network:
+        aliases:
+          - postgres
 
   # 4. Docling - PDF to Markdown conversion with table extraction
   docling:
@@ -49,7 +55,9 @@ services:
     environment:
       - HF_HOME=/models/.cache/huggingface
     networks:
-      - dev-network
+      dev-network:
+        aliases:
+          - docling
 
 volumes:
   qdrant_data:
