@@ -6,14 +6,13 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ..:/workspace:cached
-      - ~/.claude:/home/vscode/.claude # claude API key storage
     # Keeps the container alive for VS Code connection
     command: sleep infinity
     environment:
       - VECTOR_DB_URL=http://qdrant:6333
       - PG_CONN_STR=postgresql://ledger:ledgerpass@postgres:5432/ledgerdb
       - DOCLING_URL=http://docling:5001
-    networks:
+    networks: 
       - dev-network
 
   # 2. Vector Database (e.g., Qdrant)
@@ -23,7 +22,7 @@ services:
       - "6333:6333"
     volumes:
       - qdrant_data:/qdrant/storage
-    networks:
+    networks: 
       - dev-network
 
   # 3. Persistent Storage for Parent Documents & Metadata
@@ -37,7 +36,7 @@ services:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
-    networks:
+    networks: 
       - dev-network
 
   # 4. Docling - PDF to Markdown conversion with table extraction
