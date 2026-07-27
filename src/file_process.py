@@ -46,11 +46,17 @@ def pdf_to_markdown(
 
     # Step 1: Submit the file asynchronously
     with open(pdf_path, "rb") as f:
-        response = client.post(
-            "/v1/convert/file/async",
-            files={"files": (pdf_path.name, f, "application/pdf")},
-        )
-        response.raise_for_status()
+        try:
+            response = client.post(
+                "/v1/convert/file/async",
+                files={"files": (pdf_path.name, f, "application/pdf")},
+            )
+            response.raise_for_status()
+        except httpx.ConnectError:
+            raise httpx.ConnectError(
+                f"Cannot reach Docling at {DOCLING_URL}. "
+                "Make sure the docling service is running: docker compose up -d docling"
+            )
 
     task = response.json()
     task_id = task["task_id"]
