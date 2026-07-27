@@ -1,9 +1,11 @@
+import os
 import time
 from pathlib import Path
 
 import httpx
 
 from src.config import DOCLING_URL
+from src.utils import write_to_file
 
 
 def pdf_to_markdown(
@@ -77,9 +79,7 @@ def pdf_to_markdown(
         task_status = status_resp.json()["task_status"]
 
     if task_status == "failure":
-        raise RuntimeError(
-            f"Docling conversion failed for {file_path}: {task}"
-        )
+        raise RuntimeError(f"Docling conversion failed for {file_path}: {task}")
 
     # Step 3: Fetch the result
     result_resp = client.get(f"/v1/result/{task_id}")
@@ -93,4 +93,62 @@ def pdf_to_markdown(
         "markdown": document.get("md_content", ""),
         "status": result.get("status", task_status),
         "errors": errors,
+    }
+
+
+def process_and_save(
+    file_path: str,
+    raw_base: str = "data/raw",
+    processed_base: str = "data/processed",
+    timeout: int = 600,
+) -> dict:
+    """
+    Convert a raw PDF to markdown and save it under ``data/processed/``,
+    mirroring the raw directory structure.
+
+    Example::
+
+        data/raw/apple/2022/10K.pdf  →  data/processed/apple/2022/10K.md
+
+    Args:
+        file_path: Absolute or relative path to the raw PDF.
+        raw_base: The root directory for raw files. Used to derive the
+                  relative path that is mirrored under *processed_base*.
+        processed_base: The root directory for processed markdown output.
+        timeout: Passed through to :func:`pdf_to_markdown`.
+
+    Returns:
+        dict with keys:
+            - raw_path (str): The input PDF path.
+            - output_path (str): Where the markdown was written.
+            - status (str): Conversion status.
+            - errors (list): Any errors encountered.
+    """
+    raw_path = Path(file_path)
+    processed_base_path = Path(processed_base)
+
+    # Compute the relative path from raw_base, then swap extension
+    try:
+        rel = raw_path.relative_to(raw_base)
+    except ValueError:
+        # file_path is not under raw_base — just use the filename
+        rel = Path(raw_path.name)
+
+    output_path = processed_base_path / rel.with_suffix(".md")
+
+    # Ensure the output directory exists
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Convert
+    result = pdf_to_markdown(str(raw_path), timeout=timeout)
+
+    # Write the markdown
+    os.makedirs(output_path.parent, exist_ok=True)
+    write_to_file(result["markdown"], str(output_path))
+
+    return {
+        "raw_path": str(raw_path),
+        "output_path": str(output_path),
+        "status": result["status"],
+        "errors": result["errors"],
     }
