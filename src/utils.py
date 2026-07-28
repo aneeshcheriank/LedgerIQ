@@ -15,9 +15,9 @@ def file_path(data_folder: str):
             file_path = os.path.join(root, file)
             details = str(file_path).split("/")
             meta_data = {
-                "company_name": details[3],
-                "year": details[4],
-                "report_type": details[5].split(".")[0],
+                "company_name": details[-3],
+                "year": details[-2],
+                "report_type": details[-1].split(".")[0],
             }
             file_paths.append((file_path, meta_data))
     return file_paths
