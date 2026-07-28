@@ -9,7 +9,7 @@ from src.utils import file_path
 logger = logging.getLogger(__name__)
 
 
-def list_raw_files(data_folder: str = "data/raw") -> list[tuple[str, dict]]:
+def list_raw_files(data_folder: str = "./data/raw") -> list[tuple[str, dict]]:
     """
     List all raw PDF files under *data_folder* with their metadata.
 
@@ -26,8 +26,8 @@ def list_raw_files(data_folder: str = "data/raw") -> list[tuple[str, dict]]:
 
 
 def run_pipeline(
-    data_folder: str = "data/raw",
-    timeout: int = 600,
+    data_folder: str = "./data/raw",
+    timeout: int = 1200,
 ) -> dict:
     """
     Convert every raw PDF under *data_folder* to markdown and save the
