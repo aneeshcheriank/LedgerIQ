@@ -10,7 +10,7 @@ from src.utils import write_to_file
 
 def pdf_to_markdown(
     file_path: str,
-    timeout: int = 600,
+    timeout: int = 1200,
     poll_interval: float = 5.0,
 ) -> dict:
     """
@@ -24,7 +24,7 @@ def pdf_to_markdown(
     Args:
         file_path: Absolute path to the PDF file.
         timeout: Maximum time in seconds to wait for conversion. Defaults to
-                 600 (10 minutes) to accommodate large 10-K filings on CPU.
+                 1200 (20 minutes) to accommodate large 10-K filings on CPU.
         poll_interval: Seconds between status checks. Defaults to 5.
 
     Returns:
@@ -100,7 +100,7 @@ def process_and_save(
     file_path: str,
     raw_base: str = "data/raw",
     processed_base: str = "data/processed",
-    timeout: int = 600,
+    timeout: int = 1200,
 ) -> dict:
     """
     Convert a raw PDF to markdown and save it under ``data/processed/``,
