@@ -1,9 +1,10 @@
-from src.file_process import pdf_to_markdown
+import logging
+
+from src.orchestrator import run_pipeline
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
-    path = "./data/raw/apple/2022/10K.pdf"
-    result = pdf_to_markdown(path)
-    if result["status"] == "success":
-        print("PDF converted to markdown successfully.")
-        print("Markdown content:")
-        print(result["markdown"])
+    logger.info("Starting the PDF to Markdown conversion pipeline...")
+    run_pipeline()
