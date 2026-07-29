@@ -3,8 +3,14 @@
 import logging
 from pathlib import Path
 
+from src.database import init_db, store_parents
 from src.file_process import process_and_save
-from src.utils import file_path
+from src.utils import (
+    build_vectorstore,
+    extract_parents,
+    file_path,
+    load_markdown_files,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -95,4 +101,102 @@ def run_pipeline(
         "succeeded": succeeded,
         "failed": failed,
         "results": results,
+    }
+
+
+def build_index(
+    data_folder: str = "data/processed",
+    recreate: bool = True,
+) -> dict:
+    """
+    Load processed markdowns, embed them, and store in Qdrant.
+
+    This is the second stage of the pipeline — call it after
+    :func:`run_pipeline` has finished converting PDFs.
+
+    Args:
+        data_folder: Directory containing processed markdowns.
+        recreate: If True, drop and recreate the Qdrant collection first.
+
+    Returns:
+        dict with keys:
+            - documents (int): Number of chunks loaded.
+            - collection (str): Qdrant collection name.
+    """
+    logger.info("Loading markdown files from %s …", data_folder)
+    docs = load_markdown_files(data_folder)
+
+    logger.info("Embedding %d chunks and storing in Qdrant …", len(docs))
+    vectorstore = build_vectorstore(docs, recreate=recreate)
+
+    logger.info(
+        "Index built: %d chunks in collection '%s'.",
+        len(docs),
+        vectorstore.collection_name,
+    )
+
+    return {
+        "documents": len(docs),
+        "collection": vectorstore.collection_name,
+    }
+
+
+def build_hybrid_index(
+    data_folder: str = "data/processed",
+    recreate: bool = True,
+) -> dict:
+    """
+    Full hybrid pipeline: parent documents in Postgres + child chunks in Qdrant.
+
+    This is the recommended pipeline for production.  It:
+
+    1. Loads markdowns and splits into ``###`` child chunks.
+    2. Reconstructs ``##`` parent sections and stores them in Postgres
+       (with BM25 ``tsvector``), returning deterministic ``parent_id``
+       values.
+    3. Tags each child chunk with its ``parent_id`` and embeds them in
+       Qdrant for dense vector search.
+    4. After this, :class:`~src.retriever.HybridParentRetriever` can
+       combine both indexes via Reciprocal Rank Fusion.
+
+    Args:
+        data_folder: Directory containing processed markdowns.
+        recreate: If True, rebuild Postgres schema and Qdrant collection.
+
+    Returns:
+        dict with ``parents``, ``children``, and ``collection`` keys,
+        plus a ``qdrant`` handle for passing to the retriever.
+    """
+    # 1. Init Postgres schema
+    init_db()
+
+    # 2. Load and extract parent/child structure
+    logger.info("Loading markdown files from %s …", data_folder)
+    children = load_markdown_files(data_folder)
+    parents, children = extract_parents(children)
+
+    logger.info(
+        "Extracted %d parent sections and %d child chunks.",
+        len(parents),
+        len(children),
+    )
+
+    # 3. Store parents in Postgres (BM25)
+    parent_ids = store_parents(parents)
+
+    # 4. Store children in Qdrant (dense vectors with parent_id)
+    logger.info("Embedding %d child chunks and storing in Qdrant …", len(children))
+    qdrant = build_vectorstore(children, recreate=recreate)
+
+    logger.info(
+        "Hybrid index ready: %d parents (Postgres) + %d children (Qdrant).",
+        len(parent_ids),
+        len(children),
+    )
+
+    return {
+        "parents": len(parent_ids),
+        "children": len(children),
+        "collection": qdrant.collection_name,
+        "qdrant": qdrant,
     }
