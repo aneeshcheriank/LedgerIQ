@@ -219,3 +219,7 @@ __marimo__/
 
 # data files
 data/
+
+# Claude
+.claude/
+CLAUDE.md
