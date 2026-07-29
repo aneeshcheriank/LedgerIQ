@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
+from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from langchain_text_splitters import MarkdownHeaderTextSplitter
@@ -113,6 +114,76 @@ def _metadata_from_path(file_path: str) -> dict:
         "year": parts[-2] if len(parts) >= 2 else "unknown",
         "report_type": Path(parts[-1]).stem,
     }
+
+
+def extract_parents(
+    child_chunks: list,
+) -> tuple[list, list]:
+    """
+    Group *child_chunks* by ``##`` section into parent documents and assign
+    each child a ``parent_id``.
+
+    A *parent* is a full ``##``-level section (e.g. "Item 1A. Risk Factors")
+    built by concatenating every ``###``-level child that belongs to it.
+    The ``parent_id`` is a deterministic UUID derived from the composite key
+    ``(source, company, year, section)`` so that re-indexing yields the same
+    IDs.
+
+    Args:
+        child_chunks: Output of :func:`load_markdown_files` with
+                      ``split_by_headers=True``.
+
+    Returns:
+        ``(parents, children)`` tuple:
+          - *parents* — one ``Document`` per unique ``##`` section.
+          - *children* — the original chunks with ``parent_id`` added to
+            their metadata.
+    """
+    from hashlib import md5
+    from uuid import UUID
+
+    # Group children by (source, company, year, section)
+    groups: dict[tuple[str, str, str, str], list] = {}
+    for child in child_chunks:
+        key = (
+            child.metadata.get("source", ""),
+            child.metadata.get("company", ""),
+            child.metadata.get("year", ""),
+            child.metadata.get("section", ""),
+        )
+        groups.setdefault(key, []).append(child)
+
+    parents = []
+    for (source, company, year, section), group in groups.items():
+        # Deterministic UUID from the composite key
+        parent_id = str(
+            UUID(md5(f"{source}|{company}|{year}|{section}".encode()).hexdigest())
+        )
+
+        # Concatenate children in order to build the full parent content
+        parent_content = "\n\n".join(
+            c.page_content for c in sorted(group, key=lambda c: c.metadata.get("subsection", ""))
+        )
+
+        parent = Document(
+            page_content=parent_content,
+            metadata={
+                "id": parent_id,
+                "source": source,
+                "company": company,
+                "year": year,
+                "report_type": group[0].metadata.get("report_type", ""),
+                "section": section,
+                "child_count": len(group),
+            },
+        )
+        parents.append(parent)
+
+        # Tag each child with its parent_id
+        for child in group:
+            child.metadata["parent_id"] = parent_id
+
+    return parents, child_chunks
 
 
 def get_embeddings() -> HuggingFaceEmbeddings:
